@@ -59,6 +59,3 @@
         android:layout_below="@+id/loginNormal"
         />
 </RelativeLayout>
-
-
-</RelativeLayout>
