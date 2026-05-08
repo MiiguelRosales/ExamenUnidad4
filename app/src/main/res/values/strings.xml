@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ExamenUnidad4</string>
+    <string-array name="login_roles">
+        <item>Docente</item>
+        <item>Alumno</item>
+    </string-array>
 </resources>

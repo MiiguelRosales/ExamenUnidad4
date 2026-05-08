@@ -7,9 +7,58 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:layout_centerInParent="true" />
+        android:text="Login"
+        android:textSize="24sp"
+        android:layout_gravity="center"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        />
+
+    <Spinner
+        android:id="@+id/role_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:entries="@array/login_roles" />
+
+    <EditText
+        android:id="@+id/nombre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:layout_centerHorizontal="true"
+        android:hint="Nombre"
+        android:inputType="textPersonName"
+        android:layout_below="@+id/role_spinner"
+        />
+
+    <Button
+        android:id="@+id/loginNormal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:layout_centerHorizontal="true"
+        android:text="Aceptar"
+        android:layout_below="@+id/nombre"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:layout_centerHorizontal="true"
+        android:text="Admin"
+        android:layout_below="@+id/loginNormal"
+        />
+</RelativeLayout>
+
 
 </RelativeLayout>
