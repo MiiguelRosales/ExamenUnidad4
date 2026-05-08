@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.examenunidad4"
-        minSdk = 37
+        minSdk = 34
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
