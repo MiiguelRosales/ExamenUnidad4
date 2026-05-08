@@ -7,6 +7,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import android.content.Intent;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +23,19 @@ public class MainActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
+        });
+
+        EditText nombreEditText = findViewById(R.id.nombre);
+        Button btnAdmin = findViewById(R.id.btnAdmin);
+
+        btnAdmin.setOnClickListener(v -> {
+            String nombre = nombreEditText.getText().toString().trim();
+            if (nombre.equalsIgnoreCase("admin")) {
+                Intent intent = new Intent(MainActivity.this, RegistrosActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Acceso denegado: nombre incorrecto", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
