@@ -81,6 +81,14 @@
             android:hint="Dirección"
             android:inputType="textPersonName" />
 
+        <EditText
+            android:id="@+id/MateriaDocente"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="Materia que imparte el docente"
+            android:inputType="textPersonName" />
+
         <!-- MATERIAS -->
         <TextView
             android:id="@+id/textMateria"
