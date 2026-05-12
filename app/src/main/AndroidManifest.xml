@@ -21,6 +21,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".RegistrosActivity" />
+        <activity android:name=".DocentesPantallaActivity" />
+        <activity android:name=".VistaCalificacionesActivity" />
     </application>
 
 </manifest>

@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +37,21 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             } else {
                 Toast.makeText(MainActivity.this, "Acceso denegado: nombre incorrecto", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Spinner roleSpinner = findViewById(R.id.role_spinner);
+        Button loginNormal = findViewById(R.id.loginNormal);
+        loginNormal.setOnClickListener(v -> {
+            String role = roleSpinner.getSelectedItem() != null ? roleSpinner.getSelectedItem().toString() : "";
+            if (role.equalsIgnoreCase("Docente")) {
+                Intent intent = new Intent(MainActivity.this, DocentesPantallaActivity.class);
+                startActivity(intent);
+            } else if (role.equalsIgnoreCase("Alumno")) {
+                Intent intent = new Intent(MainActivity.this, VistaCalificacionesActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Seleccione un rol", Toast.LENGTH_SHORT).show();
             }
         });
     }
