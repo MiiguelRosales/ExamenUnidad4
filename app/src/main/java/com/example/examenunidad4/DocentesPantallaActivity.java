@@ -193,7 +193,15 @@ public class DocentesPantallaActivity extends AppCompatActivity {
                     continue;
                 }
 
-                if (existingCalifId == -1 && !updateExisting) {
+                if (updateExisting) {
+                    // update or insert when the user presses Actualizar
+                    ContentValues vals = new ContentValues();
+                    vals.put("numcontrol", numcontrol);
+                    vals.put("claveMateria", claveMateria);
+                    vals.put("calificacion", calif);
+                    long res = db.insertWithOnConflict("Calificaciones", null, vals, SQLiteDatabase.CONFLICT_REPLACE);
+                    if (res != -1) updated++; else skipped++;
+                } else if (existingCalifId == -1) {
                     // add new grade only when there is no existing grade for this student+materia
                     ContentValues vals = new ContentValues();
                     vals.put("numcontrol", numcontrol);
@@ -201,16 +209,8 @@ public class DocentesPantallaActivity extends AppCompatActivity {
                     vals.put("calificacion", calif);
                     long res = db.insertWithOnConflict("Calificaciones", null, vals, SQLiteDatabase.CONFLICT_IGNORE);
                     if (res != -1) inserted++; else skipped++;
-                } else if (existingCalifId != -1 && updateExisting) {
-                    // update only existing grade
-                    ContentValues vals = new ContentValues();
-                    vals.put("numcontrol", numcontrol);
-                    vals.put("claveMateria", claveMateria);
-                    vals.put("calificacion", calif);
-                    long res = db.insertWithOnConflict("Calificaciones", null, vals, SQLiteDatabase.CONFLICT_REPLACE);
-                    if (res != -1) updated++; else skipped++;
                 } else {
-                    // either trying to add where grade exists, or trying to update where no grade exists
+                    // trying to add where grade already exists
                     skipped++;
                 }
             }
@@ -218,6 +218,9 @@ public class DocentesPantallaActivity extends AppCompatActivity {
         } finally {
             db.endTransaction();
         }
+
+        // Refresh the table so row tags and displayed grades match the saved database state.
+        populateTableForMateria(db, materia);
 
         String msg = "Insertados: " + inserted + ", Actualizados: " + updated + ", Omitidos: " + skipped;
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
