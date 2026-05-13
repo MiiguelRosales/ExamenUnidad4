@@ -1,6 +1,9 @@
 package com.example.examenunidad4;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -71,14 +74,15 @@ public class MainActivity extends AppCompatActivity {
             String role = roleSpinner.getSelectedItem() != null ? roleSpinner.getSelectedItem().toString() : "";
             String input = nombreEditText.getText().toString().trim();
 
+            if (TextUtils.isEmpty(input)) {
+                Toast.makeText(MainActivity.this, "Ingrese un número válido", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (role.equalsIgnoreCase("Docente")) {
-                Intent intent = new Intent(MainActivity.this, DocentesPantallaActivity.class);
-                intent.putExtra("docente_numempleado", input);
-                startActivity(intent);
+                autenticarDocente(input);
             } else if (role.equalsIgnoreCase("Alumno")) {
-                Intent intent = new Intent(MainActivity.this, VistaCalificacionesActivity.class);
-                intent.putExtra("alumno_numcontrol", input);
-                startActivity(intent);
+                autenticarAlumno(input);
             } else if (role.equalsIgnoreCase("Admin")) {
                 if (input.equalsIgnoreCase("admin")) {
                     Intent intent = new Intent(MainActivity.this, RegistrosActivity.class);
@@ -90,5 +94,48 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Seleccione un rol", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void autenticarAlumno(String numcontrol) {
+        AdminSqLite admin = new AdminSqLite(this, "administracion", null, 2);
+        SQLiteDatabase db = admin.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery("SELECT nombrealum FROM Alumnos WHERE numcontrol = ?", new String[]{numcontrol});
+            if (cursor.moveToFirst()) {
+                Intent intent = new Intent(MainActivity.this, VistaCalificacionesActivity.class);
+                intent.putExtra("alumno_numcontrol", numcontrol);
+                intent.putExtra("alumno_nombre", cursor.getString(0));
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Número de control no registrado", Toast.LENGTH_SHORT).show();
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+            db.close();
+        }
+    }
+
+    private void autenticarDocente(String numempleado) {
+        AdminSqLite admin = new AdminSqLite(this, "administracion", null, 2);
+        SQLiteDatabase db = admin.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery("SELECT nombreDoc, Direccion FROM Docentes WHERE numEmpleado = ?", new String[]{numempleado});
+            if (cursor.moveToFirst()) {
+                Intent intent = new Intent(MainActivity.this, DocentesPantallaActivity.class);
+                intent.putExtra("docente_numempleado", numempleado);
+                intent.putExtra("docente_nombre", cursor.getString(0));
+                intent.putExtra("docente_direccion", cursor.getString(1));
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Número de empleado no registrado", Toast.LENGTH_SHORT).show();
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+            db.close();
+        }
     }
 }

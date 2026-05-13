@@ -39,6 +39,7 @@ public class RegistrosActivity extends AppCompatActivity {
     private Button btnBuscar;
     private Button btnActualizar;
     private Button btnEliminar;
+    private Button btnLimpiar;
 
     private boolean ignoreStudentSpinnerChange = false;
     private boolean ignoreDocenteSpinnerChange = false;
@@ -48,7 +49,7 @@ public class RegistrosActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registros);
 
-        admin = new AdminSqLite(this, "administracion", null, 1);
+        admin = new AdminSqLite(this, "administracion", null, 2);
         db = admin.getWritableDatabase();
 
         bindViews();
@@ -74,6 +75,7 @@ public class RegistrosActivity extends AppCompatActivity {
         btnBuscar = findViewById(R.id.btnBuscar);
         btnActualizar = findViewById(R.id.btnActualizar);
         btnEliminar = findViewById(R.id.btnEliminar);
+        btnLimpiar = findViewById(R.id.btnLimpiar);
     }
 
     private ArrayList<String> obtenerOpcionesMaterias() {
@@ -88,12 +90,6 @@ public class RegistrosActivity extends AppCompatActivity {
             }
         } finally {
             if (c != null) c.close();
-        }
-
-        if (materias.isEmpty()) {
-            materias.add("Matemáticas");
-            materias.add("Historia");
-            materias.add("Física");
         }
 
         ArrayList<String> options = new ArrayList<>();
@@ -180,6 +176,7 @@ public class RegistrosActivity extends AppCompatActivity {
         btnBuscar.setOnClickListener(v -> buscarRegistros());
         btnActualizar.setOnClickListener(v -> actualizarRegistros());
         btnEliminar.setOnClickListener(v -> eliminarRegistros());
+        btnLimpiar.setOnClickListener(v -> limpiarTodosLosCampos());
     }
 
     private void guardarRegistros() {
@@ -208,6 +205,10 @@ public class RegistrosActivity extends AppCompatActivity {
             Toast.makeText(this, "Completa número de control y nombre del alumno", Toast.LENGTH_SHORT).show();
             return false;
         }
+        if (!tieneMateriaSeleccionada(spinnerMateria1, spinnerMateria2)) {
+            Toast.makeText(this, "Selecciona al menos 1 materia para el alumno", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
         Integer num = parseEntero(codigo);
         if (num == null) {
@@ -218,6 +219,8 @@ public class RegistrosActivity extends AppCompatActivity {
         ContentValues values = new ContentValues();
         values.put("numcontrol", num);
         values.put("nombrealum", nombreAlumno);
+        values.put("materia1", materiaSeleccionada(spinnerMateria1));
+        values.put("materia2", materiaSeleccionada(spinnerMateria2));
 
         long result = db.insertWithOnConflict("Alumnos", null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (result == -1) {
@@ -239,6 +242,10 @@ public class RegistrosActivity extends AppCompatActivity {
             Toast.makeText(this, "Completa número de empleado y nombre del docente", Toast.LENGTH_SHORT).show();
             return false;
         }
+        if (!tieneMateriaSeleccionada(spinnerDocente1, spinnerDocente2)) {
+            Toast.makeText(this, "Selecciona al menos 1 materia para el docente", Toast.LENGTH_SHORT).show();
+            return false;
+        }
 
         Integer num = parseEntero(codigo);
         if (num == null) {
@@ -250,6 +257,8 @@ public class RegistrosActivity extends AppCompatActivity {
         values.put("numEmpleado", num);
         values.put("nombreDoc", nombreDocente);
         values.put("Direccion", direccion);
+        values.put("materia1", materiaSeleccionada(spinnerDocente1));
+        values.put("materia2", materiaSeleccionada(spinnerDocente2));
 
         long result = db.insertWithOnConflict("Docentes", null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (result == -1) {
@@ -303,9 +312,11 @@ public class RegistrosActivity extends AppCompatActivity {
 
         Cursor c = null;
         try {
-            c = db.rawQuery("SELECT nombrealum FROM Alumnos WHERE numcontrol = ?", new String[]{codigo});
+            c = db.rawQuery("SELECT nombrealum, materia1, materia2 FROM Alumnos WHERE numcontrol = ?", new String[]{codigo});
             if (c.moveToFirst()) {
                 nombre.setText(c.getString(0));
+                setSpinnerSelectionByName(spinnerMateria1, c.getString(1));
+                setSpinnerSelectionByName(spinnerMateria2, c.getString(2));
                 Toast.makeText(this, "Alumno encontrado", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Alumno no encontrado", Toast.LENGTH_SHORT).show();
@@ -323,10 +334,12 @@ public class RegistrosActivity extends AppCompatActivity {
 
         Cursor c = null;
         try {
-            c = db.rawQuery("SELECT nombreDoc, Direccion FROM Docentes WHERE numEmpleado = ?", new String[]{codigo});
+            c = db.rawQuery("SELECT nombreDoc, Direccion, materia1, materia2 FROM Docentes WHERE numEmpleado = ?", new String[]{codigo});
             if (c.moveToFirst()) {
                 docente.setText(c.getString(0));
                 direcciondocente.setText(c.getString(1));
+                setSpinnerSelectionByName(spinnerDocente1, c.getString(2));
+                setSpinnerSelectionByName(spinnerDocente2, c.getString(3));
                 Toast.makeText(this, "Docente encontrado", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Docente no encontrado", Toast.LENGTH_SHORT).show();
@@ -376,6 +389,8 @@ public class RegistrosActivity extends AppCompatActivity {
 
         ContentValues values = new ContentValues();
         values.put("nombrealum", nombreAlumno);
+        values.put("materia1", materiaSeleccionada(spinnerMateria1));
+        values.put("materia2", materiaSeleccionada(spinnerMateria2));
         int rows = db.update("Alumnos", values, "numcontrol = ?", new String[]{codigo});
         Toast.makeText(this, rows > 0 ? "Alumno actualizado" : "Alumno no encontrado", Toast.LENGTH_SHORT).show();
     }
@@ -395,6 +410,8 @@ public class RegistrosActivity extends AppCompatActivity {
         ContentValues values = new ContentValues();
         if (!TextUtils.isEmpty(nombreDocente)) values.put("nombreDoc", nombreDocente);
         if (!TextUtils.isEmpty(direccion)) values.put("Direccion", direccion);
+        values.put("materia1", materiaSeleccionada(spinnerDocente1));
+        values.put("materia2", materiaSeleccionada(spinnerDocente2));
 
         int rows = db.update("Docentes", values, "numEmpleado = ?", new String[]{codigo});
         Toast.makeText(this, rows > 0 ? "Docente actualizado" : "Docente no encontrado", Toast.LENGTH_SHORT).show();
@@ -469,6 +486,19 @@ public class RegistrosActivity extends AppCompatActivity {
         }
     }
 
+    private void limpiarTodosLosCampos() {
+        limpiarAlumno();
+        limpiarDocente();
+        limpiarMateria();
+
+        if (spinnerMateria1 != null) spinnerMateria1.setSelection(0);
+        if (spinnerMateria2 != null) spinnerMateria2.setSelection(0);
+        if (spinnerDocente1 != null) spinnerDocente1.setSelection(0);
+        if (spinnerDocente2 != null) spinnerDocente2.setSelection(0);
+
+        Toast.makeText(this, "Campos limpiados", Toast.LENGTH_SHORT).show();
+    }
+
     private String texto(EditText editText) {
         return editText == null ? "" : editText.getText().toString().trim();
     }
@@ -478,6 +508,38 @@ public class RegistrosActivity extends AppCompatActivity {
             return Integer.parseInt(valor);
         } catch (NumberFormatException e) {
             return null;
+        }
+    }
+
+    private boolean tieneMateriaSeleccionada(Spinner spinner1, Spinner spinner2) {
+        return materiaSeleccionada(spinner1) != null || materiaSeleccionada(spinner2) != null;
+    }
+
+    private String materiaSeleccionada(Spinner spinner) {
+        if (spinner == null || spinner.getSelectedItem() == null) {
+            return null;
+        }
+
+        String materia = spinner.getSelectedItem().toString().trim();
+        if (materia.isEmpty() || "Ninguna".equalsIgnoreCase(materia)) {
+            return null;
+        }
+        return materia;
+    }
+
+    private void setSpinnerSelectionByName(Spinner spinner, String materia) {
+        if (spinner == null || materia == null) {
+            return;
+        }
+
+        ArrayAdapter adapter = (ArrayAdapter) spinner.getAdapter();
+        if (adapter == null) {
+            return;
+        }
+
+        int index = adapter.getPosition(materia);
+        if (index >= 0) {
+            spinner.setSelection(index);
         }
     }
 
