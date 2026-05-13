@@ -194,13 +194,20 @@ public class DocentesPantallaActivity extends AppCompatActivity {
                 }
 
                 if (updateExisting) {
-                    // update or insert when the user presses Actualizar
-                    ContentValues vals = new ContentValues();
-                    vals.put("numcontrol", numcontrol);
-                    vals.put("claveMateria", claveMateria);
-                    vals.put("calificacion", calif);
-                    long res = db.insertWithOnConflict("Calificaciones", null, vals, SQLiteDatabase.CONFLICT_REPLACE);
-                    if (res != -1) updated++; else skipped++;
+                    if (existingCalifId != -1) {
+                        // update only if a grade already exists for this student+materia
+                        ContentValues vals = new ContentValues();
+                        vals.put("calificacion", calif);
+                        int rows = db.update(
+                                "Calificaciones",
+                                vals,
+                                "numcontrol = ? AND claveMateria = ?",
+                                new String[]{String.valueOf(numcontrol), String.valueOf(claveMateria)}
+                        );
+                        if (rows > 0) updated++; else skipped++;
+                    } else {
+                        skipped++; // no existing grade to update
+                    }
                 } else if (existingCalifId == -1) {
                     // add new grade only when there is no existing grade for this student+materia
                     ContentValues vals = new ContentValues();
