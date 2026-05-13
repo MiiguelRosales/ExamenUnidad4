@@ -33,21 +33,6 @@
             cursor: pointer;
         }
 
-        #logo-main, #logo-second {
-            height: 100%;
-        }
-
-        #logo-main {
-            fill: #bd9f67;
-        }
-
-        #logo-second {
-            padding-bottom: 10px;
-            fill: none;
-            stroke: #bd9f67;
-            stroke-width: 1px;
-        }
-
         .border {
             position: absolute;
             inset: 0px;
@@ -62,60 +47,42 @@
             left: 50%;
             bottom: 13px;
             transform: translateX(-50%);
-            font-size: 6px;
+            font-size: 12px;
             text-transform: uppercase;
             padding: 0px 5px 0px 8px;
             color: #bd9f67;
             background: #243137;
             opacity: 0;
-            letter-spacing: 7px;
+            letter-spacing: 2px;
             transition: all 0.5s ease-in-out;
         }
 
         .content {
             transition: all 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
         }
 
-        .content .logo {
-            height: 35px;
-            position: relative;
-            width: 33px;
-            overflow: hidden;
-            transition: all 1s ease-in-out;
-        }
-
-        .content .logo .logo1 {
-            height: 33px;
-            position: absolute;
-            left: 0;
-        }
-
-        .content .logo .logo2 {
-            height: 33px;
-            position: absolute;
-            left: 33px;
-        }
-
-        .content .logo .trail {
-            position: absolute;
-            right: 0;
-            height: 100%;
-            width: 100%;
-            opacity: 0;
-        }
-
-        .content .logo-bottom-text {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            margin-top: 30px;
+        .logo-text {
+            font-size: 48px;
+            font-weight: bold;
             color: #bd9f67;
-            padding-left: 8px;
-            font-size: 11px;
+            transition: all 1s ease-in-out;
+            letter-spacing: 8px;
+        }
+
+        .expanded-text {
+            font-size: 16px;
+            color: #bd9f67;
+            margin-top: 15px;
             opacity: 0;
-            letter-spacing: none;
-            transition: all 0.5s ease-in-out 0.5s;
+            transition: all 0.5s ease-in-out 0.3s;
+            max-width: 280px;
+            line-height: 1.3;
         }
 
         .card.expanded {
@@ -123,9 +90,13 @@
             transform: scale(1.1);
         }
 
-        .card.expanded .logo {
-            width: 134px;
-            animation: opacity 1s ease-in-out;
+        .card.expanded .logo-text {
+            font-size: 28px;
+            letter-spacing: 4px;
+        }
+
+        .card.expanded .expanded-text {
+            opacity: 1;
         }
 
         .card.expanded .border {
@@ -135,52 +106,9 @@
         }
 
         .card.expanded .bottom-text {
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             opacity: 1;
             transform: translateX(-50%);
-        }
-
-        .card.expanded .content .logo-bottom-text {
-            opacity: 1;
-            letter-spacing: 9.5px;
-        }
-
-        .card.expanded .trail {
-            animation: trail 1s ease-in-out;
-        }
-
-        @keyframes opacity {
-            0% {
-                border-right: 1px solid transparent;
-            }
-            10% {
-                border-right: 1px solid #bd9f67;
-            }
-            80% {
-                border-right: 1px solid #bd9f67;
-            }
-            100% {
-                border-right: 1px solid transparent;
-            }
-        }
-
-        @keyframes trail {
-            0% {
-                background: linear-gradient(90deg, rgba(189, 159, 103, 0) 90%, rgb(189, 159, 103) 100%);
-                opacity: 0;
-            }
-            30% {
-                background: linear-gradient(90deg, rgba(189, 159, 103, 0) 70%, rgb(189, 159, 103) 100%);
-                opacity: 1;
-            }
-            70% {
-                background: linear-gradient(90deg, rgba(189, 159, 103, 0) 70%, rgb(189, 159, 103) 100%);
-                opacity: 1;
-            }
-            95% {
-                background: linear-gradient(90deg, rgba(189, 159, 103, 0) 90%, rgb(189, 159, 103) 100%);
-                opacity: 0;
-            }
         }
     </style>
 </head>
@@ -188,24 +116,10 @@
     <div class="card" id="sieCard">
         <div class="border"></div>
         <div class="content">
-            <div class="logo">
-                <div class="logo1">
-                    <svg viewBox="0 0 29.667 31.69" xmlns="http://www.w3.org/2000/svg" id="logo-main">
-                        <path transform="translate(0 0)" d="M12.827,1.628A1.561,1.561,0,0,1,14.31,0h2.964a1.561,1.561,0,0,1,1.483,1.628v11.9a9.252,9.252,0,0,1-2.432,6.852q-2.432,2.409-6.963,2.409T2.4,20.452Q0,18.094,0,13.669V1.628A1.561,1.561,0,0,1,1.483,0h2.98A1.561,1.561,0,0,1,5.947,1.628V13.191a5.635,5.635,0,0,0,.85,3.451,3.153,3.153,0,0,0,2.632,1.094,3.032,3.032,0,0,0,2.582-1.076,5.836,5.836,0,0,0,.816-3.486Z" data-name="Path 6" id="Path_6"></path>
-                        <path transform="translate(-45.91 0)" d="M75.207,20.857a1.561,1.561,0,0,1-1.483,1.628h-2.98a1.561,1.561,0,0,1-1.483-1.628V1.628A1.561,1.561,0,0,1,70.743,0h2.98a1.561,1.561,0,0,1,1.483,1.628Z" data-name="Path 7" id="Path_7"></path>
-                        <path transform="translate(0 -51.963)" d="M0,80.018A1.561,1.561,0,0,1,1.483,78.39h26.7a1.561,1.561,0,0,1,1.483,1.628v2.006a1.561,1.561,0,0,1-1.483,1.628H1.483A1.561,1.561,0,0,1,0,82.025Z" data-name="Path 8" id="Path_8"></path>
-                    </svg>
-                </div>
-                <div class="logo2">
-                    <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg" id="logo-second">
-                        <text x="100" y="30" text-anchor="middle" fill="#bd9f67" font-size="18" font-weight="bold" font-family="Arial">Sistema de Integración Escolar</text>
-                    </svg>
-                </div>
-                <span class="trail"></span>
-            </div>
-            <span class="logo-bottom-text">SIE</span>
+            <div class="logo-text">SIE</div>
+            <div class="expanded-text">Sistema de Integración Escolar</div>
         </div>
-        <span class="bottom-text">Sistema Escolar</span>
+        <span class="bottom-text">ISC 8</span>
     </div>
 
     <script>
