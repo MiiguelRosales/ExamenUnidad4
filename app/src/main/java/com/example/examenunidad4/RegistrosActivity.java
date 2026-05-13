@@ -1,11 +1,15 @@
 package com.example.examenunidad4;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -15,8 +19,27 @@ import java.util.ArrayList;
 
 public class RegistrosActivity extends AppCompatActivity {
 
-    private Spinner spinnerMateria1, spinnerMateria2;
-    private Spinner spinnerDocente1, spinnerDocente2;
+    private AdminSqLite admin;
+    private SQLiteDatabase db;
+
+    private EditText numcontrol;
+    private EditText nombre;
+    private EditText numempleado;
+    private EditText docente;
+    private EditText direcciondocente;
+    private EditText clavemateria;
+    private EditText nombremateria;
+
+    private Spinner spinnerMateria1;
+    private Spinner spinnerMateria2;
+    private Spinner spinnerDocente1;
+    private Spinner spinnerDocente2;
+
+    private Button btnInsertar;
+    private Button btnBuscar;
+    private Button btnActualizar;
+    private Button btnEliminar;
+
     private boolean ignoreStudentSpinnerChange = false;
     private boolean ignoreDocenteSpinnerChange = false;
 
@@ -25,26 +48,46 @@ public class RegistrosActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registros);
 
-        // El botón "Regresar" fue eliminado del layout; no requiere manejo aquí.
+        admin = new AdminSqLite(this, "administracion", null, 1);
+        db = admin.getWritableDatabase();
+
+        bindViews();
+        loadMateriaAdapters();
+        configureButtons();
+    }
+
+    private void bindViews() {
+        numcontrol = findViewById(R.id.numcontrol);
+        nombre = findViewById(R.id.nombre);
+        numempleado = findViewById(R.id.numempleado);
+        docente = findViewById(R.id.docente);
+        direcciondocente = findViewById(R.id.direcciondocente);
+        clavemateria = findViewById(R.id.clavemateria);
+        nombremateria = findViewById(R.id.nombremateria);
 
         spinnerMateria1 = findViewById(R.id.spinnerMateria1);
         spinnerMateria2 = findViewById(R.id.spinnerMateria2);
         spinnerDocente1 = findViewById(R.id.spinnerDocente1);
         spinnerDocente2 = findViewById(R.id.spinnerDocente2);
 
-        // Cargar materias desde la BD
-        AdminSqLite admin = new AdminSqLite(this, "administracion", null, 1);
-        SQLiteDatabase db = admin.getReadableDatabase();
+        btnInsertar = findViewById(R.id.btnInsertar);
+        btnBuscar = findViewById(R.id.btnBuscar);
+        btnActualizar = findViewById(R.id.btnActualizar);
+        btnEliminar = findViewById(R.id.btnEliminar);
+    }
 
-        final ArrayList<String> materias = new ArrayList<>();
-        Cursor c = db.rawQuery("SELECT nombreMat FROM Materias", null);
-        if (c != null) {
+    private ArrayList<String> obtenerOpcionesMaterias() {
+        ArrayList<String> materias = new ArrayList<>();
+        Cursor c = null;
+        try {
+            c = db.rawQuery("SELECT nombreMat FROM Materias ORDER BY nombreMat", null);
             if (c.moveToFirst()) {
                 do {
                     materias.add(c.getString(0));
                 } while (c.moveToNext());
             }
-            c.close();
+        } finally {
+            if (c != null) c.close();
         }
 
         if (materias.isEmpty()) {
@@ -53,11 +96,14 @@ public class RegistrosActivity extends AppCompatActivity {
             materias.add("Física");
         }
 
-        // Añadir opción inicial para permitir "ninguna" selección
-        final ArrayList<String> options = new ArrayList<>();
+        ArrayList<String> options = new ArrayList<>();
         options.add("Ninguna");
         options.addAll(materias);
+        return options;
+    }
 
+    private void loadMateriaAdapters() {
+        final ArrayList<String> options = obtenerOpcionesMaterias();
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
@@ -66,7 +112,6 @@ public class RegistrosActivity extends AppCompatActivity {
         if (spinnerDocente1 != null) spinnerDocente1.setAdapter(adapter);
         if (spinnerDocente2 != null) spinnerDocente2.setAdapter(adapter);
 
-        // Por defecto, seleccionar "Ninguna" en los cuatro spinners
         if (spinnerMateria1 != null) spinnerMateria1.setSelection(0);
         if (spinnerMateria2 != null) spinnerMateria2.setSelection(0);
         if (spinnerDocente1 != null) spinnerDocente1.setSelection(0);
@@ -76,30 +121,21 @@ public class RegistrosActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (ignoreStudentSpinnerChange) return;
-                try {
-                    // Si alguna selección es "Ninguna" (posición 0), permitirlo
-                    int pos1 = spinnerMateria1 != null ? spinnerMateria1.getSelectedItemPosition() : 0;
-                    int pos2 = spinnerMateria2 != null ? spinnerMateria2.getSelectedItemPosition() : 0;
 
-                    if (parent == spinnerMateria1 && spinnerMateria2 != null) {
-                        if (pos1 != 0 && pos1 == pos2) {
-                            ignoreStudentSpinnerChange = true;
-                            // buscar una posición diferente que no sea 0 (Ninguna) y distinta de pos1
-                            int newPos = findDifferentPosition(options, pos1);
-                            spinnerMateria2.setSelection(newPos);
-                            Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
-                            ignoreStudentSpinnerChange = false;
-                        }
-                    } else if (parent == spinnerMateria2 && spinnerMateria1 != null) {
-                        if (pos2 != 0 && pos2 == pos1) {
-                            ignoreStudentSpinnerChange = true;
-                            int newPos = findDifferentPosition(options, pos2);
-                            spinnerMateria1.setSelection(newPos);
-                            Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
-                            ignoreStudentSpinnerChange = false;
-                        }
-                    }
-                } catch (Exception ignored) {}
+                int pos1 = spinnerMateria1 != null ? spinnerMateria1.getSelectedItemPosition() : 0;
+                int pos2 = spinnerMateria2 != null ? spinnerMateria2.getSelectedItemPosition() : 0;
+
+                if (parent == spinnerMateria1 && spinnerMateria2 != null && pos1 != 0 && pos1 == pos2) {
+                    ignoreStudentSpinnerChange = true;
+                    spinnerMateria2.setSelection(findDifferentPosition(options, pos1));
+                    Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
+                    ignoreStudentSpinnerChange = false;
+                } else if (parent == spinnerMateria2 && spinnerMateria1 != null && pos2 != 0 && pos2 == pos1) {
+                    ignoreStudentSpinnerChange = true;
+                    spinnerMateria1.setSelection(findDifferentPosition(options, pos2));
+                    Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
+                    ignoreStudentSpinnerChange = false;
+                }
             }
 
             @Override
@@ -111,28 +147,21 @@ public class RegistrosActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (ignoreDocenteSpinnerChange) return;
-                try {
-                    int dpos1 = spinnerDocente1 != null ? spinnerDocente1.getSelectedItemPosition() : 0;
-                    int dpos2 = spinnerDocente2 != null ? spinnerDocente2.getSelectedItemPosition() : 0;
 
-                    if (parent == spinnerDocente1 && spinnerDocente2 != null) {
-                        if (dpos1 != 0 && dpos1 == dpos2) {
-                            ignoreDocenteSpinnerChange = true;
-                            int newPos = findDifferentPosition(options, dpos1);
-                            spinnerDocente2.setSelection(newPos);
-                            Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
-                            ignoreDocenteSpinnerChange = false;
-                        }
-                    } else if (parent == spinnerDocente2 && spinnerDocente1 != null) {
-                        if (dpos2 != 0 && dpos2 == dpos1) {
-                            ignoreDocenteSpinnerChange = true;
-                            int newPos = findDifferentPosition(options, dpos2);
-                            spinnerDocente1.setSelection(newPos);
-                            Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
-                            ignoreDocenteSpinnerChange = false;
-                        }
-                    }
-                } catch (Exception ignored) {}
+                int pos1 = spinnerDocente1 != null ? spinnerDocente1.getSelectedItemPosition() : 0;
+                int pos2 = spinnerDocente2 != null ? spinnerDocente2.getSelectedItemPosition() : 0;
+
+                if (parent == spinnerDocente1 && spinnerDocente2 != null && pos1 != 0 && pos1 == pos2) {
+                    ignoreDocenteSpinnerChange = true;
+                    spinnerDocente2.setSelection(findDifferentPosition(options, pos1));
+                    Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
+                    ignoreDocenteSpinnerChange = false;
+                } else if (parent == spinnerDocente2 && spinnerDocente1 != null && pos2 != 0 && pos2 == pos1) {
+                    ignoreDocenteSpinnerChange = true;
+                    spinnerDocente1.setSelection(findDifferentPosition(options, pos2));
+                    Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
+                    ignoreDocenteSpinnerChange = false;
+                }
             }
 
             @Override
@@ -144,6 +173,328 @@ public class RegistrosActivity extends AppCompatActivity {
         if (spinnerMateria2 != null) spinnerMateria2.setOnItemSelectedListener(studentListener);
         if (spinnerDocente1 != null) spinnerDocente1.setOnItemSelectedListener(docenteListener);
         if (spinnerDocente2 != null) spinnerDocente2.setOnItemSelectedListener(docenteListener);
+    }
+
+    private void configureButtons() {
+        btnInsertar.setOnClickListener(v -> guardarRegistros());
+        btnBuscar.setOnClickListener(v -> buscarRegistros());
+        btnActualizar.setOnClickListener(v -> actualizarRegistros());
+        btnEliminar.setOnClickListener(v -> eliminarRegistros());
+    }
+
+    private void guardarRegistros() {
+        int guardados = 0;
+
+        if (guardarAlumno()) guardados++;
+        if (guardarDocente()) guardados++;
+        if (guardarMateria()) guardados++;
+
+        if (guardados == 0) {
+            Toast.makeText(this, "Completa al menos un apartado para guardar", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Guardado correcto en " + guardados + " apartado(s)", Toast.LENGTH_LONG).show();
+            loadMateriaAdapters();
+        }
+    }
+
+    private boolean guardarAlumno() {
+        String codigo = texto(numcontrol);
+        String nombreAlumno = texto(nombre);
+
+        if (TextUtils.isEmpty(codigo) && TextUtils.isEmpty(nombreAlumno)) {
+            return false;
+        }
+        if (TextUtils.isEmpty(codigo) || TextUtils.isEmpty(nombreAlumno)) {
+            Toast.makeText(this, "Completa número de control y nombre del alumno", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Integer num = parseEntero(codigo);
+        if (num == null) {
+            Toast.makeText(this, "Número de control inválido", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("numcontrol", num);
+        values.put("nombrealum", nombreAlumno);
+
+        long result = db.insertWithOnConflict("Alumnos", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if (result == -1) {
+            Toast.makeText(this, "El alumno ya existe", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean guardarDocente() {
+        String codigo = texto(numempleado);
+        String nombreDocente = texto(docente);
+        String direccion = texto(direcciondocente);
+
+        if (TextUtils.isEmpty(codigo) && TextUtils.isEmpty(nombreDocente) && TextUtils.isEmpty(direccion)) {
+            return false;
+        }
+        if (TextUtils.isEmpty(codigo) || TextUtils.isEmpty(nombreDocente)) {
+            Toast.makeText(this, "Completa número de empleado y nombre del docente", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Integer num = parseEntero(codigo);
+        if (num == null) {
+            Toast.makeText(this, "Número de empleado inválido", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("numEmpleado", num);
+        values.put("nombreDoc", nombreDocente);
+        values.put("Direccion", direccion);
+
+        long result = db.insertWithOnConflict("Docentes", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if (result == -1) {
+            Toast.makeText(this, "El docente ya existe", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean guardarMateria() {
+        String codigo = texto(clavemateria);
+        String nombreMateria = texto(nombremateria);
+
+        if (TextUtils.isEmpty(codigo) && TextUtils.isEmpty(nombreMateria)) {
+            return false;
+        }
+        if (TextUtils.isEmpty(codigo) || TextUtils.isEmpty(nombreMateria)) {
+            Toast.makeText(this, "Completa clave y nombre de la materia", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Integer num = parseEntero(codigo);
+        if (num == null) {
+            Toast.makeText(this, "Clave de materia inválida", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("claveMateria", num);
+        values.put("nombreMat", nombreMateria);
+
+        long result = db.insertWithOnConflict("Materias", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if (result == -1) {
+            Toast.makeText(this, "La materia ya existe", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void buscarRegistros() {
+        buscarAlumno();
+        buscarDocente();
+        buscarMateria();
+    }
+
+    private void buscarAlumno() {
+        String codigo = texto(numcontrol);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        Cursor c = null;
+        try {
+            c = db.rawQuery("SELECT nombrealum FROM Alumnos WHERE numcontrol = ?", new String[]{codigo});
+            if (c.moveToFirst()) {
+                nombre.setText(c.getString(0));
+                Toast.makeText(this, "Alumno encontrado", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Alumno no encontrado", Toast.LENGTH_SHORT).show();
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+    }
+
+    private void buscarDocente() {
+        String codigo = texto(numempleado);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        Cursor c = null;
+        try {
+            c = db.rawQuery("SELECT nombreDoc, Direccion FROM Docentes WHERE numEmpleado = ?", new String[]{codigo});
+            if (c.moveToFirst()) {
+                docente.setText(c.getString(0));
+                direcciondocente.setText(c.getString(1));
+                Toast.makeText(this, "Docente encontrado", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Docente no encontrado", Toast.LENGTH_SHORT).show();
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+    }
+
+    private void buscarMateria() {
+        String codigo = texto(clavemateria);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        Cursor c = null;
+        try {
+            c = db.rawQuery("SELECT nombreMat FROM Materias WHERE claveMateria = ?", new String[]{codigo});
+            if (c.moveToFirst()) {
+                nombremateria.setText(c.getString(0));
+                Toast.makeText(this, "Materia encontrada", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Materia no encontrada", Toast.LENGTH_SHORT).show();
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+    }
+
+    private void actualizarRegistros() {
+        actualizarAlumno();
+        actualizarDocente();
+        actualizarMateria();
+        loadMateriaAdapters();
+    }
+
+    private void actualizarAlumno() {
+        String codigo = texto(numcontrol);
+        String nombreAlumno = texto(nombre);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+        if (TextUtils.isEmpty(nombreAlumno)) {
+            Toast.makeText(this, "No hay datos para actualizar alumno", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("nombrealum", nombreAlumno);
+        int rows = db.update("Alumnos", values, "numcontrol = ?", new String[]{codigo});
+        Toast.makeText(this, rows > 0 ? "Alumno actualizado" : "Alumno no encontrado", Toast.LENGTH_SHORT).show();
+    }
+
+    private void actualizarDocente() {
+        String codigo = texto(numempleado);
+        String nombreDocente = texto(docente);
+        String direccion = texto(direcciondocente);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+        if (TextUtils.isEmpty(nombreDocente) && TextUtils.isEmpty(direccion)) {
+            Toast.makeText(this, "No hay datos para actualizar docente", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ContentValues values = new ContentValues();
+        if (!TextUtils.isEmpty(nombreDocente)) values.put("nombreDoc", nombreDocente);
+        if (!TextUtils.isEmpty(direccion)) values.put("Direccion", direccion);
+
+        int rows = db.update("Docentes", values, "numEmpleado = ?", new String[]{codigo});
+        Toast.makeText(this, rows > 0 ? "Docente actualizado" : "Docente no encontrado", Toast.LENGTH_SHORT).show();
+    }
+
+    private void actualizarMateria() {
+        String codigo = texto(clavemateria);
+        String nombreMateria = texto(nombremateria);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+        if (TextUtils.isEmpty(nombreMateria)) {
+            Toast.makeText(this, "No hay datos para actualizar materia", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put("nombreMat", nombreMateria);
+        int rows = db.update("Materias", values, "claveMateria = ?", new String[]{codigo});
+        Toast.makeText(this, rows > 0 ? "Materia actualizada" : "Materia no encontrada", Toast.LENGTH_SHORT).show();
+    }
+
+    private void eliminarRegistros() {
+        eliminarAlumno();
+        eliminarDocente();
+        eliminarMateria();
+        loadMateriaAdapters();
+    }
+
+    private void eliminarAlumno() {
+        String codigo = texto(numcontrol);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        int rows = db.delete("Alumnos", "numcontrol = ?", new String[]{codigo});
+        if (rows > 0) {
+            limpiarAlumno();
+            Toast.makeText(this, "Alumno eliminado", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Alumno no encontrado", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void eliminarDocente() {
+        String codigo = texto(numempleado);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        int rows = db.delete("Docentes", "numEmpleado = ?", new String[]{codigo});
+        if (rows > 0) {
+            limpiarDocente();
+            Toast.makeText(this, "Docente eliminado", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Docente no encontrado", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void eliminarMateria() {
+        String codigo = texto(clavemateria);
+        if (TextUtils.isEmpty(codigo)) {
+            return;
+        }
+
+        int rows = db.delete("Materias", "claveMateria = ?", new String[]{codigo});
+        if (rows > 0) {
+            limpiarMateria();
+            Toast.makeText(this, "Materia eliminada", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Materia no encontrada", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String texto(EditText editText) {
+        return editText == null ? "" : editText.getText().toString().trim();
+    }
+
+    private Integer parseEntero(String valor) {
+        try {
+            return Integer.parseInt(valor);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void limpiarAlumno() {
+        numcontrol.setText("");
+        nombre.setText("");
+    }
+
+    private void limpiarDocente() {
+        numempleado.setText("");
+        docente.setText("");
+        direcciondocente.setText("");
+    }
+
+    private void limpiarMateria() {
+        clavemateria.setText("");
+        nombremateria.setText("");
     }
 
     private int findDifferentPosition(ArrayList<String> options, int forbiddenPos) {
