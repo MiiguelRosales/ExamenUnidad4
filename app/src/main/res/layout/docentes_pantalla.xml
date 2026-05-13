@@ -1,84 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="110dp"
+        android:background="@color/primary"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center_horizontal">
-
-        <Button
-            android:id="@+id/btnRegresarDocentes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginBottom="10dp"
-            android:layout_marginTop="30dp"
-            android:text="← Regresar"  />
+        android:gravity="center"
+        android:padding="16dp">
 
         <TextView
-            android:id="@+id/titleDocente"
+            android:id="@+id/headerDocentes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pantalla Docentes"
+            android:text="SIE - Docentes"
+            android:textColor="@color/card_bg"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp" />
-
-        <TextView
-            android:id="@+id/tvDocenteNombre"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Nombre: --"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/tvDocenteNumero"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Número de empleado: --"
-            android:layout_marginTop="4dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/tvDocenteDireccion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Dirección: --"
-            android:layout_marginTop="4dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Materia que imparte:"
-            android:layout_marginTop="12dp"
-            android:textSize="16sp" />
-
-        <Spinner
-            android:id="@+id/spinnerMaterias"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alumnos y calificaciones:"
-            android:layout_marginTop="16dp"
-            android:textSize="16sp"
             android:textStyle="bold" />
-
-        <TableLayout
-            android:id="@+id/tableAlumnos"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:stretchColumns="*"
-            android:layout_marginTop="8dp" />
-
     </LinearLayout>
-</ScrollView>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:gravity="top">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@color/card_bg"
+                android:padding="12dp"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/tvDocenteNombre"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre: --"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvDocenteNumero"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Número de empleado: --"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvDocenteDireccion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Dirección: --"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Materia que imparte:"
+                    android:layout_marginTop="12dp"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary" />
+
+                <Spinner
+                    android:id="@+id/spinnerMaterias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:popupBackground="@color/card_bg" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alumnos y calificaciones:"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <!-- Table container: header fixed, body scrollable -->
+            <LinearLayout
+                android:id="@+id/tableContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/table_card_bg"
+                android:padding="12dp">
+
+                <!-- fixed header -->
+                <TableLayout
+                    android:id="@+id/tableAlumnosHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stretchColumns="*">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Alumno"
+                            android:textStyle="bold"
+                            android:textColor="@color/table_text" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Calificación"
+                            android:textStyle="bold"
+                            android:textColor="@color/table_text" />
+                    </TableRow>
+                </TableLayout>
+
+                <!-- scrollable body -->
+                <ScrollView
+                    android:id="@+id/scrollTableBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fillViewport="false">
+
+                    <TableLayout
+                        android:id="@+id/tableAlumnosBody"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:stretchColumns="*" />
+
+                </ScrollView>
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="12dp">
+
+                <Button
+                    android:id="@+id/btnAgregarCalifs"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_margin="6dp"
+                    android:text="Agregar"
+                    android:backgroundTint="@color/primary"
+                    android:textColor="@color/card_bg" />
+
+                <Button
+                    android:id="@+id/btnActualizarCalifs"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_margin="6dp"
+                    android:text="Actualizar"
+                    android:backgroundTint="@color/accent"
+                    android:textColor="@color/card_bg" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

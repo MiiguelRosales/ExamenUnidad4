@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -26,10 +25,7 @@ public class RegistrosActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registros);
 
-        Button btnRegresar = findViewById(R.id.btnRegresar);
-        if (btnRegresar != null) {
-            btnRegresar.setOnClickListener(v -> finish());
-        }
+        // El botón "Regresar" fue eliminado del layout; no requiere manejo aquí.
 
         spinnerMateria1 = findViewById(R.id.spinnerMateria1);
         spinnerMateria2 = findViewById(R.id.spinnerMateria2);
@@ -62,8 +58,8 @@ public class RegistrosActivity extends AppCompatActivity {
         options.add("Ninguna");
         options.addAll(materias);
 
-        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
 
         if (spinnerMateria1 != null) spinnerMateria1.setAdapter(adapter);
         if (spinnerMateria2 != null) spinnerMateria2.setAdapter(adapter);

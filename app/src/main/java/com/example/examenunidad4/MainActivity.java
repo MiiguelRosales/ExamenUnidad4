@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.webkit.WebView;
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,29 +29,63 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        EditText nombreEditText = findViewById(R.id.nombre);
-        Button btnAdmin = findViewById(R.id.btnAdmin);
+        // Cargar tarjeta SIE desde HTML
+        WebView sieCardView = findViewById(R.id.sieCardView);
+        sieCardView.getSettings().setJavaScriptEnabled(true);
+        sieCardView.loadUrl("file:///android_asset/sie_card.html");
 
-        btnAdmin.setOnClickListener(v -> {
-            String nombre = nombreEditText.getText().toString().trim();
-            if (nombre.equalsIgnoreCase("admin")) {
-                Intent intent = new Intent(MainActivity.this, RegistrosActivity.class);
-                startActivity(intent);
-            } else {
-                Toast.makeText(MainActivity.this, "Acceso denegado: nombre incorrecto", Toast.LENGTH_SHORT).show();
+        EditText nombreEditText = findViewById(R.id.nombre);
+        Spinner roleSpinner = findViewById(R.id.role_spinner);
+        // Reiniciar adapter para usar layout con texto oscuro
+        String[] roles = getResources().getStringArray(R.array.login_roles);
+        ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, roles);
+        roleAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        roleSpinner.setAdapter(roleAdapter);
+
+        // Listener para cambiar el hint dinámicamente según el rol seleccionado
+        roleSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                String selectedRole = roles[position];
+                if (selectedRole.equalsIgnoreCase("Docente")) {
+                    nombreEditText.setHint("Número de empleado");
+                    nombreEditText.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+                } else if (selectedRole.equalsIgnoreCase("Alumno")) {
+                    nombreEditText.setHint("Número de control");
+                    nombreEditText.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+                } else if (selectedRole.equalsIgnoreCase("Admin")) {
+                    nombreEditText.setHint("Contraseña");
+                    nombreEditText.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                }
+                nombreEditText.setText("");
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                nombreEditText.setHint("Nombre");
             }
         });
 
-        Spinner roleSpinner = findViewById(R.id.role_spinner);
         Button loginNormal = findViewById(R.id.loginNormal);
         loginNormal.setOnClickListener(v -> {
             String role = roleSpinner.getSelectedItem() != null ? roleSpinner.getSelectedItem().toString() : "";
+            String input = nombreEditText.getText().toString().trim();
+
             if (role.equalsIgnoreCase("Docente")) {
                 Intent intent = new Intent(MainActivity.this, DocentesPantallaActivity.class);
+                intent.putExtra("docente_numempleado", input);
                 startActivity(intent);
             } else if (role.equalsIgnoreCase("Alumno")) {
                 Intent intent = new Intent(MainActivity.this, VistaCalificacionesActivity.class);
+                intent.putExtra("alumno_numcontrol", input);
                 startActivity(intent);
+            } else if (role.equalsIgnoreCase("Admin")) {
+                if (input.equalsIgnoreCase("admin")) {
+                    Intent intent = new Intent(MainActivity.this, RegistrosActivity.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Toast.makeText(MainActivity.this, "Seleccione un rol", Toast.LENGTH_SHORT).show();
             }
