@@ -53,7 +53,7 @@ public class RegistrosActivity extends AppCompatActivity {
         db = admin.getWritableDatabase();
 
         bindViews();
-        loadMateriaAdapters();
+        loadMateriaAdapters(null);
         configureButtons();
     }
 
@@ -98,15 +98,20 @@ public class RegistrosActivity extends AppCompatActivity {
         return options;
     }
 
-    private void loadMateriaAdapters() {
-        final ArrayList<String> options = obtenerOpcionesMaterias();
-        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+    private void loadMateriaAdapters(Integer currentDocente) {
+        final ArrayList<String> studentOptions = obtenerOpcionesMaterias();
+        final ArrayList<String> docenteOptions = obtenerOpcionesMateriasParaDocente(currentDocente);
 
-        if (spinnerMateria1 != null) spinnerMateria1.setAdapter(adapter);
-        if (spinnerMateria2 != null) spinnerMateria2.setAdapter(adapter);
-        if (spinnerDocente1 != null) spinnerDocente1.setAdapter(adapter);
-        if (spinnerDocente2 != null) spinnerDocente2.setAdapter(adapter);
+        final ArrayAdapter<String> studentAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, studentOptions);
+        studentAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+
+        final ArrayAdapter<String> docenteAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, docenteOptions);
+        docenteAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+
+        if (spinnerMateria1 != null) spinnerMateria1.setAdapter(studentAdapter);
+        if (spinnerMateria2 != null) spinnerMateria2.setAdapter(studentAdapter);
+        if (spinnerDocente1 != null) spinnerDocente1.setAdapter(docenteAdapter);
+        if (spinnerDocente2 != null) spinnerDocente2.setAdapter(docenteAdapter);
 
         if (spinnerMateria1 != null) spinnerMateria1.setSelection(0);
         if (spinnerMateria2 != null) spinnerMateria2.setSelection(0);
@@ -123,12 +128,12 @@ public class RegistrosActivity extends AppCompatActivity {
 
                 if (parent == spinnerMateria1 && spinnerMateria2 != null && pos1 != 0 && pos1 == pos2) {
                     ignoreStudentSpinnerChange = true;
-                    spinnerMateria2.setSelection(findDifferentPosition(options, pos1));
+                    spinnerMateria2.setSelection(findDifferentPosition(studentOptions, pos1));
                     Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
                     ignoreStudentSpinnerChange = false;
                 } else if (parent == spinnerMateria2 && spinnerMateria1 != null && pos2 != 0 && pos2 == pos1) {
                     ignoreStudentSpinnerChange = true;
-                    spinnerMateria1.setSelection(findDifferentPosition(options, pos2));
+                    spinnerMateria1.setSelection(findDifferentPosition(studentOptions, pos2));
                     Toast.makeText(RegistrosActivity.this, "Las materias del alumno deben ser diferentes", Toast.LENGTH_SHORT).show();
                     ignoreStudentSpinnerChange = false;
                 }
@@ -149,12 +154,12 @@ public class RegistrosActivity extends AppCompatActivity {
 
                 if (parent == spinnerDocente1 && spinnerDocente2 != null && pos1 != 0 && pos1 == pos2) {
                     ignoreDocenteSpinnerChange = true;
-                    spinnerDocente2.setSelection(findDifferentPosition(options, pos1));
+                    spinnerDocente2.setSelection(findDifferentPosition(docenteOptions, pos1));
                     Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
                     ignoreDocenteSpinnerChange = false;
                 } else if (parent == spinnerDocente2 && spinnerDocente1 != null && pos2 != 0 && pos2 == pos1) {
                     ignoreDocenteSpinnerChange = true;
-                    spinnerDocente1.setSelection(findDifferentPosition(options, pos2));
+                    spinnerDocente1.setSelection(findDifferentPosition(docenteOptions, pos2));
                     Toast.makeText(RegistrosActivity.this, "Las materias del docente deben ser diferentes", Toast.LENGTH_SHORT).show();
                     ignoreDocenteSpinnerChange = false;
                 }
@@ -169,6 +174,22 @@ public class RegistrosActivity extends AppCompatActivity {
         if (spinnerMateria2 != null) spinnerMateria2.setOnItemSelectedListener(studentListener);
         if (spinnerDocente1 != null) spinnerDocente1.setOnItemSelectedListener(docenteListener);
         if (spinnerDocente2 != null) spinnerDocente2.setOnItemSelectedListener(docenteListener);
+    }
+
+    private void loadMateriaAdapters() {
+        loadMateriaAdapters(null);
+    }
+
+    private void loadStudentMateriaAdapters() {
+        final ArrayList<String> studentOptions = obtenerOpcionesMaterias();
+        final ArrayAdapter<String> studentAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, studentOptions);
+        studentAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+
+        if (spinnerMateria1 != null) spinnerMateria1.setAdapter(studentAdapter);
+        if (spinnerMateria2 != null) spinnerMateria2.setAdapter(studentAdapter);
+
+        if (spinnerMateria1 != null) spinnerMateria1.setSelection(0);
+        if (spinnerMateria2 != null) spinnerMateria2.setSelection(0);
     }
 
     private void configureButtons() {
@@ -253,12 +274,21 @@ public class RegistrosActivity extends AppCompatActivity {
             return false;
         }
 
+        String materia1 = materiaSeleccionada(spinnerDocente1);
+        String materia2 = materiaSeleccionada(spinnerDocente2);
+        String conflicto = getMateriaAsignadaAOtroDocente(materia1, num);
+        if (conflicto == null) conflicto = getMateriaAsignadaAOtroDocente(materia2, num);
+        if (conflicto != null) {
+            Toast.makeText(this, "La materia '" + conflicto + "' ya está asignada a otro docente", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
         ContentValues values = new ContentValues();
         values.put("numEmpleado", num);
         values.put("nombreDoc", nombreDocente);
         values.put("Direccion", direccion);
-        values.put("materia1", materiaSeleccionada(spinnerDocente1));
-        values.put("materia2", materiaSeleccionada(spinnerDocente2));
+        values.put("materia1", materia1);
+        values.put("materia2", materia2);
 
         long result = db.insertWithOnConflict("Docentes", null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (result == -1) {
@@ -315,6 +345,7 @@ public class RegistrosActivity extends AppCompatActivity {
             c = db.rawQuery("SELECT nombrealum, materia1, materia2 FROM Alumnos WHERE numcontrol = ?", new String[]{codigo});
             if (c.moveToFirst()) {
                 nombre.setText(c.getString(0));
+                loadStudentMateriaAdapters();
                 setSpinnerSelectionByName(spinnerMateria1, c.getString(1));
                 setSpinnerSelectionByName(spinnerMateria2, c.getString(2));
                 Toast.makeText(this, "Alumno encontrado", Toast.LENGTH_SHORT).show();
@@ -338,10 +369,15 @@ public class RegistrosActivity extends AppCompatActivity {
             if (c.moveToFirst()) {
                 docente.setText(c.getString(0));
                 direcciondocente.setText(c.getString(1));
+                Integer currentDocente = parseEntero(codigo);
+                loadMateriaAdapters(currentDocente);
                 setSpinnerSelectionByName(spinnerDocente1, c.getString(2));
                 setSpinnerSelectionByName(spinnerDocente2, c.getString(3));
                 Toast.makeText(this, "Docente encontrado", Toast.LENGTH_SHORT).show();
             } else {
+                docente.setText("");
+                direcciondocente.setText("");
+                loadMateriaAdapters(null);
                 Toast.makeText(this, "Docente no encontrado", Toast.LENGTH_SHORT).show();
             }
         } finally {
@@ -382,13 +418,15 @@ public class RegistrosActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(codigo)) {
             return;
         }
-        if (TextUtils.isEmpty(nombreAlumno)) {
+        if (TextUtils.isEmpty(nombreAlumno) && !tieneMateriaSeleccionada(spinnerMateria1, spinnerMateria2)) {
             Toast.makeText(this, "No hay datos para actualizar alumno", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ContentValues values = new ContentValues();
-        values.put("nombrealum", nombreAlumno);
+        if (!TextUtils.isEmpty(nombreAlumno)) {
+            values.put("nombrealum", nombreAlumno);
+        }
         values.put("materia1", materiaSeleccionada(spinnerMateria1));
         values.put("materia2", materiaSeleccionada(spinnerMateria2));
         int rows = db.update("Alumnos", values, "numcontrol = ?", new String[]{codigo});
@@ -407,11 +445,26 @@ public class RegistrosActivity extends AppCompatActivity {
             return;
         }
 
+        Integer num = parseEntero(codigo);
+        if (num == null) {
+            Toast.makeText(this, "Número de empleado inválido", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String materia1 = materiaSeleccionada(spinnerDocente1);
+        String materia2 = materiaSeleccionada(spinnerDocente2);
+        String conflicto = getMateriaAsignadaAOtroDocente(materia1, num);
+        if (conflicto == null) conflicto = getMateriaAsignadaAOtroDocente(materia2, num);
+        if (conflicto != null) {
+            Toast.makeText(this, "La materia '" + conflicto + "' ya está asignada a otro docente", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         ContentValues values = new ContentValues();
         if (!TextUtils.isEmpty(nombreDocente)) values.put("nombreDoc", nombreDocente);
         if (!TextUtils.isEmpty(direccion)) values.put("Direccion", direccion);
-        values.put("materia1", materiaSeleccionada(spinnerDocente1));
-        values.put("materia2", materiaSeleccionada(spinnerDocente2));
+        values.put("materia1", materia1);
+        values.put("materia2", materia2);
 
         int rows = db.update("Docentes", values, "numEmpleado = ?", new String[]{codigo});
         Toast.makeText(this, rows > 0 ? "Docente actualizado" : "Docente no encontrado", Toast.LENGTH_SHORT).show();
@@ -511,8 +564,81 @@ public class RegistrosActivity extends AppCompatActivity {
         }
     }
 
+    private String getMateriaAsignadaAOtroDocente(String materia, Integer currentEmpleado) {
+        if (materia == null) {
+            return null;
+        }
+
+        String query = "SELECT numEmpleado FROM Docentes WHERE (materia1 = ? OR materia2 = ?)";
+        String[] args;
+        if (currentEmpleado != null) {
+            query += " AND numEmpleado != ?";
+            args = new String[]{materia, materia, currentEmpleado.toString()};
+        } else {
+            args = new String[]{materia, materia};
+        }
+
+        Cursor c = null;
+        try {
+            c = db.rawQuery(query, args);
+            if (c.moveToFirst()) {
+                return materia;
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+        return null;
+    }
+
     private boolean tieneMateriaSeleccionada(Spinner spinner1, Spinner spinner2) {
         return materiaSeleccionada(spinner1) != null || materiaSeleccionada(spinner2) != null;
+    }
+
+    private ArrayList<String> obtenerOpcionesMateriasParaDocente(Integer currentDocente) {
+        ArrayList<String> materias = new ArrayList<>();
+        Cursor c = null;
+        try {
+            c = db.rawQuery("SELECT nombreMat FROM Materias ORDER BY nombreMat", null);
+            if (c.moveToFirst()) {
+                do {
+                    materias.add(c.getString(0));
+                } while (c.moveToNext());
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+
+        java.util.HashSet<String> asignadas = new java.util.HashSet<>();
+        try {
+            if (currentDocente != null) {
+                c = db.rawQuery("SELECT materia1, materia2 FROM Docentes WHERE numEmpleado != ?", new String[]{currentDocente.toString()});
+            } else {
+                c = db.rawQuery("SELECT materia1, materia2 FROM Docentes", null);
+            }
+            if (c.moveToFirst()) {
+                do {
+                    String materia1 = c.getString(0);
+                    String materia2 = c.getString(1);
+                    if (materia1 != null && !materia1.isEmpty() && !"Ninguna".equalsIgnoreCase(materia1)) {
+                        asignadas.add(materia1);
+                    }
+                    if (materia2 != null && !materia2.isEmpty() && !"Ninguna".equalsIgnoreCase(materia2)) {
+                        asignadas.add(materia2);
+                    }
+                } while (c.moveToNext());
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+
+        ArrayList<String> options = new ArrayList<>();
+        options.add("Ninguna");
+        for (String materia : materias) {
+            if (!asignadas.contains(materia)) {
+                options.add(materia);
+            }
+        }
+        return options;
     }
 
     private String materiaSeleccionada(Spinner spinner) {
@@ -528,7 +654,7 @@ public class RegistrosActivity extends AppCompatActivity {
     }
 
     private void setSpinnerSelectionByName(Spinner spinner, String materia) {
-        if (spinner == null || materia == null) {
+        if (spinner == null) {
             return;
         }
 
@@ -537,9 +663,16 @@ public class RegistrosActivity extends AppCompatActivity {
             return;
         }
 
+        if (materia == null || materia.isEmpty() || "Ninguna".equalsIgnoreCase(materia)) {
+            spinner.setSelection(0);
+            return;
+        }
+
         int index = adapter.getPosition(materia);
         if (index >= 0) {
             spinner.setSelection(index);
+        } else {
+            spinner.setSelection(0);
         }
     }
 
